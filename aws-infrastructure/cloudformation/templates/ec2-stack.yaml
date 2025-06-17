@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'EC2 Instances Stack'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    Description: Environment name
+  PublicSubnet:
+    Type: AWS::EC2::Subnet::Id
+    Default: subnet-0b823ac60124145f7  
+    Description: Public Subnet ID
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet::Id
+    Default: subnet-065aa3eaffa9a94de  
+    Description: Private Subnet ID
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: Lab_1
+    Description: Name of the SSH key pair
+  PublicSecurityGroup:
+    Type: AWS::EC2::SecurityGroup::Id
+    Default: sg-0ef4088d769aae034 
+    Description: Public Security Group ID
+  PrivateSecurityGroup:
+    Type: AWS::EC2::SecurityGroup::Id
+    Default: sg-0388de8cc21f40a6c  
+    Description: Private Security Group ID
+  AmiUbuntu:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /amazon/ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20250516
+    Description: Ubuntu AMI from SSM
+  AmiAmazon:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    Description: Amazon Linux 2 AMI from SSM
+
+Resources:
+  PublicInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AmiUbuntu
+      InstanceType: t2.micro
+      SubnetId: !Ref PublicSubnet
+      KeyName: !Ref KeyName
+      SecurityGroupIds:
+        - !Ref PublicSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub '${Environment}-public-instance'
+        - Key: Environment
+          Value: !Ref Environment
+
+  PrivateInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AmiAmazon
+      InstanceType: t2.micro
+      SubnetId: !Ref PrivateSubnet
+      KeyName: !Ref KeyName
+      SecurityGroupIds:
+        - !Ref PrivateSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub '${Environment}-private-instance'
+        - Key: Environment
+          Value: !Ref Environment
+
+Outputs:
+  PublicInstanceId:
+    Description: Public Instance ID
+    Value: !Ref PublicInstance
+  PrivateInstanceId:
+    Description: Private Instance ID
+    Value: !Ref PrivateInstance
+  PublicInstanceIp:
+    Description: Public Instance IP
+    Value: !GetAtt PublicInstance.PublicIp
+  PrivateInstanceIp:
+    Description: Private Instance IP
+    Value: !GetAtt PrivateInstance.PrivateIp
